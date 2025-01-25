@@ -16,7 +16,9 @@ mod config;
 fn rocket() -> _ {
     dotenv().ok();
 
-    let figment = rocket::Config::figment().merge(("ident", "C0D3M4513R Mail AutoDiscover-AutoConfig"));
+    let figment = rocket::Config::figment()
+        .merge(("ident", "C0D3M4513R Mail AutoDiscover-AutoConfig"))
+        .merge(("address", "0.0.0.0"));
 
     let mut rocket = rocket::custom(figment).attach(Template::fairing()).mount(
         "/",
