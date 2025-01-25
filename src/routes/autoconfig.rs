@@ -3,7 +3,6 @@ use crate::resources::AutoDiscoverJson::{AutoDiscoverJson, AutoDiscoverJsonError
 use crate::resources::AutoDiscoverXml::{
     AutoDiscoverXml, AutoDiscoverXmlError, AutoDiscoverXmlPayload,
 };
-use chrono::Local;
 use rocket::serde::json::Json;
 use rocket_dyn_templates::{context, Template};
 
@@ -160,7 +159,7 @@ fn autodiscover_microsoft(
                 })
             }
             _ => {
-                let date = Local::now();
+                let date = chrono::Local::now();
                 Err(AutoDiscoverXmlError {
                     template: Template::render(
                         "xml/autodiscover-error",

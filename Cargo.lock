@@ -3,16 +3,6 @@
 version = 3
 
 [[package]]
-name = "addr"
-version = "0.15.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a93b8a41dbe230ad5087cc721f8d41611de654542180586b315d9f4cf6b72bef"
-dependencies = [
- "psl",
- "psl-types",
-]
-
-[[package]]
 name = "addr2line"
 version = "0.24.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -204,9 +194,7 @@ checksum = "7e36cc9d416881d2e24f9a963be5fb1cd90966419ac844274161d10488b3e825"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
- "js-sys",
  "num-traits",
- "wasm-bindgen",
  "windows-targets 0.52.6",
 ]
 
@@ -887,7 +875,6 @@ dependencies = [
 name = "mail-autodiscover-autoconfig"
 version = "1.6.1"
 dependencies = [
- "addr",
  "chrono",
  "dotenv",
  "phf",
@@ -895,7 +882,6 @@ dependencies = [
  "rocket",
  "rocket_dyn_templates",
  "serde",
- "serde_json",
  "tera",
 ]
 
@@ -1261,21 +1247,6 @@ dependencies = [
  "version_check",
  "yansi",
 ]
-
-[[package]]
-name = "psl"
-version = "2.1.80"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05ff66fe75e86ef6bb57a5e7c1af22cc3ff5368ec610559609ea08e304d7c772"
-dependencies = [
- "psl-types",
-]
-
-[[package]]
-name = "psl-types"
-version = "2.0.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33cb294fe86a74cbcf50d4445b37da762029549ebeea341421c7c70370f86cac"
 
 [[package]]
 name = "quick-xml"

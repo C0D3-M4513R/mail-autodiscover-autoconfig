@@ -8,7 +8,7 @@ on:
       - main
 jobs:
   push:
-    name: "rust-dc-bot"
+    name: "build docker release"
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -28,7 +28,7 @@ jobs:
         with:
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          file: ./Dockerfile
+          file: ./docker/Dockerfile
           #          platforms: linux/amd64, linux/arm64
           platforms: linux/amd64
           push: true

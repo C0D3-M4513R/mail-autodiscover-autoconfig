@@ -1,19 +1,11 @@
 [package]
 name = "mail-autodiscover-autoconfig"
 version = "1.6.1"
-authors = ["William Desportes <williamdes@wdes.fr>"]
 edition = "2021"
-rust-version = "1.72"
-
-[badges]
-github = { repository = "mail-autodiscover-autoconfig", branch = "main" }
-#codecov = { repository = "mail-autodiscover-autoconfig", branch = "main", service = "github" }
-is-it-maintained-issue-resolution = { repository = "mail-autodiscover-autoconfig" }
-is-it-maintained-open-issues = { repository = "mail-autodiscover-autoconfig" }
-maintenance = { status = "passively-maintained" }
+rust-version = "1.74"
 
 [features]
-default = ["apple", "dns"]
+default = ["apple"]
 apple = []
 dns = []
 
@@ -21,17 +13,13 @@ dns = []
 # ENV
 dotenv = "0.15.0"
 
-# Domain parsing
-addr = "0.15.3"
-
 # Webserver
 rocket = { version = "0.5.0", features = ["json"] }
 
 # Serialization/Deserialization
 quick-xml = { version = "0.37.2", default-features = false, features = [ "serialize" ] }
-serde_json = "1.0.64"
 serde = { version = "1.0.153", default-features = false, features = [ "derive" ] }
-chrono = "0.4.34"
+chrono = { version = "0.4.34" , default-features = false, features = ["clock"]}
 phf = { version = "0.11.3", features = ["macros"] }
 
 [dependencies.tera]

@@ -3,7 +3,6 @@ extern crate rocket;
 extern crate dotenv;
 extern crate rocket_dyn_templates;
 extern crate serde;
-extern crate serde_json;
 extern crate tera;
 
 use crate::dotenv::dotenv;
@@ -12,7 +11,6 @@ use rocket_dyn_templates::Template;
 pub mod resources;
 pub mod routes;
 mod config;
-mod dummy;
 
 #[launch]
 fn rocket() -> _ {
