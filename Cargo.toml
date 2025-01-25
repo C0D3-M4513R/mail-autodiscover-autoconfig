@@ -4,7 +4,6 @@ version = "1.6.1"
 authors = ["William Desportes <williamdes@wdes.fr>"]
 edition = "2021"
 rust-version = "1.72"
-build = "src/build.rs"
 
 [badges]
 github = { repository = "mail-autodiscover-autoconfig", branch = "main" }
@@ -29,7 +28,7 @@ addr = "0.15.3"
 rocket = { version = "0.5.0", features = ["json"] }
 
 # Serialization/Deserialization
-quick-xml = { version = "0.31.0", default-features = false, features = [ "serialize" ] }
+quick-xml = { version = "0.37.2", default-features = false, features = [ "serialize" ] }
 serde_json = "1.0.64"
 serde = { version = "1.0.153", default-features = false, features = [ "derive" ] }
 chrono = "0.4.34"
@@ -39,12 +38,8 @@ version = "1"
 default-features = false
 
 [dependencies.rocket_dyn_templates]
-version = "0.1.0"
+version = "0.2.0"
 features = ["tera"]
 
 [dev-dependencies]
 temp-env = "0.3.1"
-
-[build-dependencies]
-anyhow = "1.0.63"
-vergen = { version = "8.3.1", features = ["build", "cargo", "git", "gitcl", "rustc"] }

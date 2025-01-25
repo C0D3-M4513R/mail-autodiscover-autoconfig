@@ -8,7 +8,6 @@ extern crate tera;
 
 use crate::dotenv::dotenv;
 use rocket_dyn_templates::Template;
-use std::env;
 
 pub mod host_header;
 pub mod resources;
@@ -20,16 +19,6 @@ fn rocket() -> _ {
     println!(
         "Wdes Mail AutoDiscover-AutoConfig (https://github.com/wdes/mail-autodiscover-autoconfig)."
     );
-
-    println!(
-        "Version: {} built on Rust: {} at: {} using commit: {} on branch: {}",
-        env!("CARGO_PKG_VERSION"),
-        env!("VERGEN_RUSTC_SEMVER"),
-        env!("VERGEN_BUILD_TIMESTAMP"),
-        env!("VERGEN_GIT_SHA"),
-        env!("VERGEN_GIT_BRANCH"),
-    );
-
     dotenv().ok();
 
     let custom_domains: String = util::get_custom_domains_list();
