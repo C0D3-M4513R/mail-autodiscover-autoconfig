@@ -1,4 +1,3 @@
-use quick_xml::de::from_str;
 use quick_xml::DeError;
 use rocket::data::ByteUnit;
 use rocket::data::{self, Capped, Data, FromData};
@@ -52,7 +51,7 @@ impl<'r> FromData<'r> for AutoDiscoverXmlPayload {
             data.open(size_limit).into_string().await;
         match contents {
             Ok(dd) => {
-                let payload: Result<AutoDiscoverXmlPayload, DeError> = from_str(&dd);
+                let payload: Result<AutoDiscoverXmlPayload, DeError> = quick_xml::de::from_str(&dd);
                 match payload {
                     Ok(d) => Success(d),
                     Err(e) => Error((
@@ -68,7 +67,7 @@ impl<'r> FromData<'r> for AutoDiscoverXmlPayload {
 
 pub struct AutoDiscoverXml {
     pub template: Template,
-    pub domain: String,
+    pub domain: &'static str,
 }
 
 impl<'r, 'o: 'r> Responder<'r, 'o> for AutoDiscoverXml {

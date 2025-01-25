@@ -4,7 +4,7 @@ use rocket_dyn_templates::Template;
 
 pub struct DnsTxtResponse {
     pub template: Template,
-    pub domain: String,
+    pub domain: &'static str,
 }
 
 impl<'r, 'o: 'r> Responder<'r, 'o> for DnsTxtResponse {
@@ -13,7 +13,7 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for DnsTxtResponse {
             .raw_header("Content-Type", "text/plain; charset=utf-8")
             .raw_header(
                 "Content-Disposition",
-                "attachment; filename=\"".to_owned() + &self.domain + "-dns-zone.txt\"",
+                format!(r#"attachment; filename="{}-dns-zone.txt""#, self.domain),
             )
             .ok()
     }

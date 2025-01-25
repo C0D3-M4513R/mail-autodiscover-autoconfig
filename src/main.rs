@@ -9,30 +9,21 @@ extern crate tera;
 use crate::dotenv::dotenv;
 use rocket_dyn_templates::Template;
 
-pub mod host_header;
 pub mod resources;
 pub mod routes;
-pub mod util;
+mod config;
 
 #[launch]
 fn rocket() -> _ {
-    println!(
-        "Wdes Mail AutoDiscover-AutoConfig (https://github.com/wdes/mail-autodiscover-autoconfig)."
-    );
     dotenv().ok();
 
-    let custom_domains: String = util::get_custom_domains_list();
-    println!("Custom domains: {}", custom_domains);
-
-    let figment = rocket::Config::figment().merge(("ident", "Wdes Mail AutoDiscover-AutoConfig"));
+    let figment = rocket::Config::figment().merge(("ident", "C0D3M4513R Mail AutoDiscover-AutoConfig"));
 
     let mut rocket = rocket::custom(figment).attach(Template::fairing()).mount(
         "/",
         routes![
             routes::tech::index,
             routes::tech::robots,
-            routes::tech::version,
-            routes::tech::ping,
             routes::autoconfig::v11_mail_config_v11,
             routes::autoconfig::mail_config_v11,
             routes::autoconfig::well_known_mail_config_v11,

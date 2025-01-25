@@ -4,7 +4,7 @@ use rocket_dyn_templates::Template;
 
 pub struct AppleResponse {
     pub template: Template,
-    pub domain: String,
+    pub domain: &'static str,
 }
 
 impl<'r, 'o: 'r> Responder<'r, 'o> for AppleResponse {
@@ -16,7 +16,7 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for AppleResponse {
             )
             .raw_header(
                 "Content-Disposition",
-                "attachment; filename=\"".to_owned() + &self.domain + ".mobileconfig\"",
+                format!(r#"attachment; filename="{}.mobileconfig""#, self.domain),
             )
             .ok()
     }

@@ -4,58 +4,48 @@
     <emailProvider id="{{ domain }}">
         <domain>{{ domain }}</domain>
         <displayName>{{ display_name }}</displayName>
-        <displayShortName>%EMAILLOCALPART%</displayShortName>
+        <displayShortName>{{ display_name }}</displayShortName>
 
+        {% macro socket_type(ssl) %}
+            <socketType>
+            {% if ssl == "StartTls" %}
+            STARTTLS
+            {% elif ssl == "None" %}
+            plain
+            {% else %}
+            {{ssl}}
+            {% endif %}
+            </socketType>
+        {% endmacro %}
+
+        {% for imap_service in imap.instances %}
         <incomingServer type="imap">
-            <hostname>{{ imap_hostname }}</hostname>
-            <port>993</port>
-            <socketType>SSL</socketType>
+            <hostname>{{ imap.hostname }}</hostname>
+            <port>{{imap_service.port}}</port>
+            {{ self::socket_type(ssl=imap_service.ssl) }}
             <authentication>password-cleartext</authentication>
-            <username>%EMAILADDRESS%</username>
+            <username>{{email}}</username>
         </incomingServer>
-        <incomingServer type="imap">
-            <hostname>{{ imap_hostname }}</hostname>
-            <port>143</port>
-            <socketType>STARTTLS</socketType>
-            <authentication>password-cleartext</authentication>
-            <username>%EMAILADDRESS%</username>
-        </incomingServer>
+        {% endfor %}
 
+        {% for pop_service in pop.instances %}
         <incomingServer type="pop3">
-            <hostname>{{ pop_hostname }}</hostname>
-            <port>995</port>
-            <socketType>SSL</socketType>
+            <hostname>{{ pop.hostname }}</hostname>
+            <port>{{pop_service.port}}</port>
+            {{ self::socket_type(ssl=pop_service.ssl) }}
             <authentication>password-cleartext</authentication>
-            <username>%EMAILADDRESS%</username>
-            <leaveMessagesOnServer>false</leaveMessagesOnServer>
-            <downloadOnBiff>true</downloadOnBiff>
-            <daysToLeaveMessagesOnServer>0</daysToLeaveMessagesOnServer>
+            <username>{{email}}</username>
         </incomingServer>
-        <incomingServer type="pop3">
-            <hostname>{{ pop_hostname }}</hostname>
-            <port>110</port>
-            <socketType>STARTTLS</socketType>
-            <authentication>password-cleartext</authentication>
-            <username>%EMAILADDRESS%</username>
-            <leaveMessagesOnServer>false</leaveMessagesOnServer>
-            <downloadOnBiff>true</downloadOnBiff>
-            <daysToLeaveMessagesOnServer>0</daysToLeaveMessagesOnServer>
-        </incomingServer>
+        {% endfor %}
 
+        {% for smtp_service in smtp.instances %}
         <outgoingServer type="smtp">
-            <hostname>{{ smtp_hostname }}</hostname>
-            <port>465</port>
-            <socketType>SSL</socketType>
+            <hostname>{{ smtp.hostname }}</hostname>
+            <port>{{ smtp_service.port }}</port>
+            {{ self::socket_type(ssl=smtp_service.ssl) }}
             <authentication>password-cleartext</authentication>
-            <username>%EMAILADDRESS%</username>
+            <username>{{ email }}</username>
         </outgoingServer>
-        <outgoingServer type="smtp">
-            <hostname>{{ smtp_hostname }}</hostname>
-            <port>587</port>
-            <socketType>STARTTLS</socketType>
-            <authentication>password-cleartext</authentication>
-            <username>%EMAILADDRESS%</username>
-        </outgoingServer>
-
+        {% endfor %}
     </emailProvider>
 </clientConfig>

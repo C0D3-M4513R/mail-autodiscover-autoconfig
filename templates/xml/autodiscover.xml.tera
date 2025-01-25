@@ -1,43 +1,55 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006">
     <Response xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a">
+        {% if email_address | length >= 1 %}
+        <User>
+            <EMailAddress>{{ email_address }}</EMailAddress>
+        </User>
+        {% endif %}
         <Account>
+            {% macro ssl(value) %}<SSL>{% if value == "SSL" or value == "StartTls" %}on{% else %}off{% endif %}</SSL>{% endmacro ssl %}
+            {% macro login_name(value) %}{% if value | length >= 1 %}<LoginName>{{ value }}</LoginName>{% endif %}{% endmacro login_name %}
             <AccountType>email</AccountType>
             <Action>settings</Action>
-
+            {% for instance in imap.instances %}
             <Protocol>
                 <Type>IMAP</Type>
-                <Server>{{ imap_hostname }}</Server>
-                <Port>993</Port>
+                <Server>{{ imap.hostname }}</Server>
+                <Port>{{ instance.port }}</Port>
+                {{ self::login_name(value=email_address) }}
                 <DomainRequired>on</DomainRequired>
                 <DomainName>{{ domain }}</DomainName>
-                <SPA>off</SPA>
-                <SSL>on</SSL>
+                <SPA>on</SPA>
+                {{ self::ssl(value=instance.ssl) }}
                 <AuthRequired>on</AuthRequired>
             </Protocol>
-
+            {% endfor %}
+            {% for instance in pop.instances %}
             <Protocol>
                 <Type>POP3</Type>
-                <Server>{{ pop_hostname }}</Server>
-                <Port>995</Port>
+                <Server>{{ pop.hostname }}</Server>
+                <Port>{{ instance.port }}</Port>
+                {{ self::login_name(value=email_address) }}
                 <DomainRequired>on</DomainRequired>
                 <DomainName>{{ domain }}</DomainName>
-                <SPA>off</SPA>
-                <SSL>on</SSL>
+                <SPA>on</SPA>
+                {{ self::ssl(value=instance.ssl) }}
                 <AuthRequired>on</AuthRequired>
             </Protocol>
-
+            {% endfor %}
+            {% for instance in smtp.instances %}
             <Protocol>
                 <Type>SMTP</Type>
-                <Server>{{ smtp_hostname }}</Server>
-                <Port>465</Port>
+                <Server>{{ smtp.hostname }}</Server>
+                <Port>{{ instance.port }}</Port>
+                {{ self::login_name(value=email_address) }}
                 <DomainRequired>on</DomainRequired>
                 <DomainName>{{ domain }}</DomainName>
-                <SPA>off</SPA>
-                <SSL>on</SSL>
+                <SPA>on</SPA>
+                {{ self::ssl(value=instance.ssl) }}
                 <AuthRequired>on</AuthRequired>
             </Protocol>
-
+            {% endfor %}
         </Account>
     </Response>
 </Autodiscover>

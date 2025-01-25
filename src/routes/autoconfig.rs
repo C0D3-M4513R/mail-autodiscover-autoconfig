@@ -1,27 +1,28 @@
-use crate::host_header::HostHeader;
 use crate::resources::AppleResponse::AppleResponse;
 use crate::resources::AutoDiscoverJson::{AutoDiscoverJson, AutoDiscoverJsonError};
 use crate::resources::AutoDiscoverXml::{
     AutoDiscoverXml, AutoDiscoverXmlError, AutoDiscoverXmlPayload,
 };
-use crate::util::{get_config_for_domain, Config};
 use chrono::Local;
 use rocket::serde::json::Json;
 use rocket_dyn_templates::{context, Template};
-use std::env;
 
-fn handle_mail_config_v11(host: HostHeader) -> AutoDiscoverXml {
-    let config: Config = get_config_for_domain(&host.base_domain);
+fn handle_mail_config_v11<'a>(config: crate::config::DomainConfiguration, emailaddress: Option<&'a str>) -> AutoDiscoverXml {
+    let email:std::borrow::Cow<'a, str> = match emailaddress {
+        None => "%EMAILADDRESS%".into(),
+        Some(e) => if e.contains("@") { e.into() } else { format!("{}@{}", e, config.domain).into() },
+    };
     AutoDiscoverXml {
-        domain: config.domain.to_string(),
+        domain: config.domain,
         template: Template::render(
             "xml/config-v1.1",
             context! {
                 domain: config.domain,
-                display_name: config.display_name,
-                imap_hostname: config.imap_hostname,
-                pop_hostname: config.pop_hostname,
-                smtp_hostname: config.smtp_hostname,
+                display_name: config.config.display_name,
+                email: email,
+                imap: config.config.imap,
+                pop: config.config.pop,
+                smtp: config.config.smtp,
             },
         ),
     }
@@ -38,21 +39,21 @@ fn handle_mail_config_v11(host: HostHeader) -> AutoDiscoverXml {
 // Used by K-9 Mail on Android (tested version: 6.709, since: 6.709)
 #[get("/mail/config-v1.1.xml?<emailaddress>")]
 #[allow(unused_variables)]
-pub fn mail_config_v11(host: HostHeader, emailaddress: Option<&str>) -> AutoDiscoverXml {
-    handle_mail_config_v11(host)
+pub fn mail_config_v11(host: crate::config::DomainConfiguration, emailaddress: Option<&str>) -> AutoDiscoverXml {
+    handle_mail_config_v11(host, emailaddress)
 }
 
 // Used by Android Nine (tested version: 4.9.4b) (com.ninefolders.hd3)
 #[get("/v1.1/mail/config-v1.1.xml?<emailaddress>")]
 #[allow(unused_variables)]
-pub fn v11_mail_config_v11(host: HostHeader, emailaddress: Option<&str>) -> AutoDiscoverXml {
-    handle_mail_config_v11(host)
+pub fn v11_mail_config_v11(host: crate::config::DomainConfiguration, emailaddress: Option<&str>) -> AutoDiscoverXml {
+    handle_mail_config_v11(host, emailaddress)
 }
 
 #[get("/.well-known/autoconfig/mail/config-v1.1.xml?<emailaddress>")]
 #[allow(unused_variables)]
-pub fn well_known_mail_config_v11(host: HostHeader, emailaddress: Option<&str>) -> AutoDiscoverXml {
-    handle_mail_config_v11(host)
+pub fn well_known_mail_config_v11(host: crate::config::DomainConfiguration, emailaddress: Option<&str>) -> AutoDiscoverXml {
+    handle_mail_config_v11(host, emailaddress)
 }
 
 // Used by Android Nine (tested version: 4.9.4b) (com.ninefolders.hd3)
@@ -65,7 +66,7 @@ pub fn well_known_mail_config_v11(host: HostHeader, emailaddress: Option<&str>) 
 #[allow(unused_variables)]
 #[allow(non_snake_case)]
 pub fn post_mail_autodiscover_microsoft_json(
-    host: HostHeader,
+    host: crate::config::DomainConfiguration,
     Email: Option<&str>,
     Protocol: Option<&str>,
     RedirectCount: Option<&str>,
@@ -73,11 +74,11 @@ pub fn post_mail_autodiscover_microsoft_json(
     match Protocol {
         Some("AutodiscoverV1") => Ok(Json(AutoDiscoverJson {
             Protocol: "AutodiscoverV1".to_string(),
-            Url: "https://".to_owned() + &host.host + "/Autodiscover/Autodiscover.xml",
+            Url: "https://".to_owned() + &host.domain + "/Autodiscover/Autodiscover.xml",
         })),
         Some("Autodiscoverv1") => Ok(Json(AutoDiscoverJson {
             Protocol: "Autodiscoverv1".to_string(),
-            Url: "https://".to_owned() + &host.host + "/Autodiscover/Autodiscover.xml",
+            Url: "https://".to_owned() + &host.domain + "/Autodiscover/Autodiscover.xml",
         })),
         /*
         Some("ActiveSync") => Some(AutoDiscoverJson {
@@ -99,7 +100,7 @@ pub fn post_mail_autodiscover_microsoft_json(
 #[allow(unused_variables)]
 #[allow(non_snake_case)]
 pub fn post_mail_autodiscover_microsoft_json_legacy(
-    host: HostHeader,
+    host: crate::config::DomainConfiguration,
     Email: Option<&str>,
     Protocol: Option<&str>,
     RedirectCount: Option<&str>,
@@ -107,11 +108,11 @@ pub fn post_mail_autodiscover_microsoft_json_legacy(
     match Protocol {
         Some("AutodiscoverV1") => Ok(Json(AutoDiscoverJson {
             Protocol: "AutodiscoverV1".to_string(),
-            Url: "https://".to_owned() + &host.host + "/Autodiscover/Autodiscover.xml",
+            Url: "https://".to_owned() + &host.domain + "/Autodiscover/Autodiscover.xml",
         })),
         Some("Autodiscoverv1") => Ok(Json(AutoDiscoverJson {
             Protocol: "Autodiscoverv1".to_string(),
-            Url: "https://".to_owned() + &host.host + "/Autodiscover/Autodiscover.xml",
+            Url: "https://".to_owned() + &host.domain + "/Autodiscover/Autodiscover.xml",
         })),
         /*
         Some("ActiveSync") => Some(AutoDiscoverJson {
@@ -127,25 +128,33 @@ pub fn post_mail_autodiscover_microsoft_json_legacy(
     }
 }
 
+//https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/protocol-pox
 fn autodiscover_microsoft(
-    host: HostHeader,
+    host: crate::config::DomainConfiguration,
     payload: Option<AutoDiscoverXmlPayload>,
 ) -> Result<AutoDiscoverXml, AutoDiscoverXmlError> {
-    let config: Config = get_config_for_domain(&host.base_domain);
+    let email_address = payload.as_ref().map(|v|v.Request.EMailAddress.as_ref()).flatten().map(|v|{
+        if v.contains("@") {
+            v.clone()
+        } else {
+            format!("{}@{}", v, host.domain)
+        }
+    }).unwrap_or(String::new());
     // TODO: http://schemas.microsoft.com/exchange/autodiscover/mobilesync/responseschema/2006
-    match payload {
+    match &payload {
         Some(p) => match p.Request.AcceptableResponseSchema.as_str() {
             "http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a" => {
                 Ok(AutoDiscoverXml {
-                    domain: config.domain.to_string(),
+                    domain: host.domain,
                     template: Template::render(
                         "xml/autodiscover",
                         context! {
-                            domain: config.domain,
-                            display_name: config.display_name,
-                            imap_hostname: config.imap_hostname,
-                            pop_hostname: config.pop_hostname,
-                            smtp_hostname: config.smtp_hostname,
+                            email_address: email_address,
+                            domain: host.domain,
+                            display_name: host.config.display_name,
+                            imap: host.config.imap,
+                            pop: host.config.pop,
+                            smtp: host.config.smtp,
                         },
                     ),
                 })
@@ -164,15 +173,16 @@ fn autodiscover_microsoft(
             }
         },
         None => Ok(AutoDiscoverXml {
-            domain: config.domain.to_string(),
+            domain: host.domain,
             template: Template::render(
                 "xml/autodiscover",
                 context! {
-                    domain: config.domain,
-                    display_name: config.display_name,
-                    imap_hostname: config.imap_hostname,
-                    pop_hostname: config.pop_hostname,
-                    smtp_hostname: config.smtp_hostname,
+                    email_address: email_address,
+                    domain: host.domain,
+                    display_name: host.config.display_name,
+                    imap: host.config.imap,
+                    pop: host.config.pop,
+                    smtp: host.config.smtp,
                 },
             ),
         }),
@@ -186,21 +196,21 @@ fn autodiscover_microsoft(
 // Used by Microsoft Office Pro Plus 2021 (tested version: 14326.20454 64 bits)
 #[get("/autodiscover/autodiscover.xml")]
 pub fn mail_autodiscover_microsoft(
-    host: HostHeader,
+    host: crate::config::DomainConfiguration,
 ) -> Result<AutoDiscoverXml, AutoDiscoverXmlError> {
     autodiscover_microsoft(host, None)
 }
 
 #[get("/Autodiscover/Autodiscover.xml")]
 pub fn mail_autodiscover_microsoft_case(
-    host: HostHeader,
+    host: crate::config::DomainConfiguration,
 ) -> Result<AutoDiscoverXml, AutoDiscoverXmlError> {
     autodiscover_microsoft(host, None)
 }
 
 #[get("/AutoDiscover/AutoDiscover.xml")]
 pub fn mail_autodiscover_microsoft_camel_case(
-    host: HostHeader,
+    host: crate::config::DomainConfiguration,
 ) -> Result<AutoDiscoverXml, AutoDiscoverXmlError> {
     autodiscover_microsoft(host, None)
 }
@@ -212,7 +222,7 @@ pub fn mail_autodiscover_microsoft_camel_case(
 // Used by Microsoft Office 2009 (to be confirmed)
 #[post("/autodiscover/autodiscover.xml", data = "<payload>")]
 pub fn post_mail_autodiscover_microsoft(
-    host: HostHeader,
+    host: crate::config::DomainConfiguration,
     payload: AutoDiscoverXmlPayload,
 ) -> Result<AutoDiscoverXml, AutoDiscoverXmlError> {
     autodiscover_microsoft(host, Some(payload))
@@ -220,7 +230,7 @@ pub fn post_mail_autodiscover_microsoft(
 
 #[post("/Autodiscover/Autodiscover.xml", data = "<payload>")]
 pub fn post_mail_autodiscover_microsoft_case(
-    host: HostHeader,
+    host: crate::config::DomainConfiguration,
     payload: AutoDiscoverXmlPayload,
 ) -> Result<AutoDiscoverXml, AutoDiscoverXmlError> {
     autodiscover_microsoft(host, Some(payload))
@@ -228,7 +238,7 @@ pub fn post_mail_autodiscover_microsoft_case(
 
 #[post("/AutoDiscover/AutoDiscover.xml", data = "<payload>")]
 pub fn post_mail_autodiscover_microsoft_camel_case(
-    host: HostHeader,
+    host: crate::config::DomainConfiguration,
     payload: AutoDiscoverXmlPayload,
 ) -> Result<AutoDiscoverXml, AutoDiscoverXmlError> {
     autodiscover_microsoft(host, Some(payload))
@@ -236,96 +246,28 @@ pub fn post_mail_autodiscover_microsoft_camel_case(
 
 // iOS / Apple Mail (/email.mobileconfig?email=username@domain.com or /email.mobileconfig?email=username)
 #[get("/email.mobileconfig?<email>")]
-pub fn mail_autodiscover_apple_mobileconfig(host: HostHeader, email: &str) -> AppleResponse {
-    let config: Config = get_config_for_domain(&host.base_domain);
-    let mail_uuid: String = env::var("APPLE_MAIL_UUID").expect("APPLE_MAIL_UUID must be set");
-    let profile_uuid: String =
-        env::var("APPLE_PROFILE_UUID").expect("APPLE_PROFILE_UUID must be set");
+pub fn mail_autodiscover_apple_mobileconfig(host: crate::config::DomainConfiguration, email: &str) -> AppleResponse {
+    let email_address = if !email.contains("@") {
+        format!("{}@{}", email, host.domain)
+    } else {
+        email.to_string()
+    };
 
     // See :https://developer.apple.com/business/documentation/Configuration-Profile-Reference.pdf
     AppleResponse {
-        domain: config.domain.to_string(),
+        domain: host.domain,
         template: Template::render(
             "xml/email_mobileconfig",
             context! {
-                domain: config.domain,
-                display_name: config.display_name,
-                imap_hostname: config.imap_hostname,
-                pop_hostname: config.pop_hostname,
-                smtp_hostname: config.smtp_hostname,
-                email_address: email,
-                username: email,
-                mail_uuid: mail_uuid,
-                profile_uuid: profile_uuid,
+                domain: host.domain,
+                display_name: host.config.display_name,
+                imap: host.config.imap,
+                pop: host.config.pop,
+                smtp: host.config.smtp,
+                email_address: email_address,
+                mail_uuid: host.config.mail_uuid,
+                profile_uuid: host.config.profile_uuid,
             },
         ),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_get_config_for_domain() {
-        temp_env::with_vars(
-            vec![
-                ("CUSTOM_DOMAINS", Some("foo.tld")),
-                ("IMAP_HOSTNAME", Some("imap.foo.tld")),
-                ("POP_HOSTNAME", Some("pop.example.tld")),
-                ("SMTP_HOSTNAME", Some("smtp.domain.tld")),
-            ],
-            || {
-                assert_eq!(
-                    Config {
-                        domain: "foo.tld",
-                        display_name: "foo.tld Mail".to_string(),
-                        imap_hostname: "imap.foo.tld".to_string(),
-                        pop_hostname: "pop.foo.tld".to_string(),
-                        smtp_hostname: "smtp.foo.tld".to_string(),
-                    },
-                    get_config_for_domain("foo.tld")
-                );
-            },
-        );
-        temp_env::with_vars(
-            vec![
-                ("CUSTOM_DOMAINS", Some("foo.bar")),
-                ("IMAP_HOSTNAME", Some("imap.custom.tld")),
-                ("POP_HOSTNAME", Some("pop.example.tld")),
-                ("SMTP_HOSTNAME", Some("smtp.domain.tld")),
-            ],
-            || {
-                assert_eq!(
-                    Config {
-                        domain: "foo.tld",
-                        display_name: "foo.tld Mail".to_string(),
-                        imap_hostname: "imap.custom.tld".to_string(),
-                        pop_hostname: "pop.example.tld".to_string(),
-                        smtp_hostname: "smtp.domain.tld".to_string(),
-                    },
-                    get_config_for_domain("foo.tld")
-                );
-            },
-        );
-        temp_env::with_vars(
-            vec![
-                ("IMAP_HOSTNAME", Some("imap.custom.tld")),
-                ("POP_HOSTNAME", Some("pop.example.tld")),
-                ("SMTP_HOSTNAME", Some("smtp.domain.tld")),
-            ],
-            || {
-                assert_eq!(
-                    Config {
-                        domain: "foo.tld",
-                        display_name: "foo.tld Mail".to_string(),
-                        imap_hostname: "imap.custom.tld".to_string(),
-                        pop_hostname: "pop.example.tld".to_string(),
-                        smtp_hostname: "smtp.domain.tld".to_string(),
-                    },
-                    get_config_for_domain("foo.tld")
-                );
-            },
-        );
     }
 }

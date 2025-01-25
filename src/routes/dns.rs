@@ -1,27 +1,18 @@
-use crate::host_header::HostHeader;
 use crate::resources::DnsTxtResponse::DnsTxtResponse;
-use crate::util::{get_config_for_domain, Config};
 use rocket_dyn_templates::{context, Template};
 
 #[get("/dns-zone")]
-pub fn dns_txt_zone(host: HostHeader) -> DnsTxtResponse {
-    let config: Config = get_config_for_domain(&host.base_domain);
-
+pub fn dns_txt_zone(host: crate::config::DomainConfiguration) -> DnsTxtResponse {
     // See :https://developer.apple.com/business/documentation/Configuration-Profile-Reference.pdf
     DnsTxtResponse {
-        domain: config.domain.to_string(),
+        domain: host.domain,
         template: Template::render(
             "dns/zone",
             context! {
-                imap_hostname: config.imap_hostname,
-                pop_hostname: config.pop_hostname,
-                smtp_hostname: config.smtp_hostname,
+                imap_hostname: host.config.imap.hostname,
+                pop_hostname: host.config.pop.hostname,
+                smtp_hostname: host.config.smtp.hostname,
             },
         ),
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
 }

@@ -13,28 +13,40 @@
             <string>EmailTypeIMAP</string>
             <key>EmailAddress</key>
             <string>{{ email_address }}</string>
+            {% if imap.instances | length >= 1 %}
             <key>IncomingMailServerAuthentication</key>
             <string>EmailAuthPassword</string>
             <key>IncomingMailServerHostName</key>
-            <string>{{ imap_hostname }}</string>
+            <string>{{ imap.hostname }}</string>
             <key>IncomingMailServerPortNumber</key>
-            <integer>993</integer>
+            <integer>{{ imap.instances[0].port }}</integer>
             <key>IncomingMailServerUseSSL</key>
+            {%if imap.instances[0].ssl == "SSL" or imap.instances[0].ssl == "StartTls" %}
             <true/>
+            {% else %}
+            <false/>
+            {% endif %}
             <key>IncomingMailServerUsername</key>
-            <string>{{ username }}</string>
+            <string>{{ email_address }}</string>
+            {% endif %}
+            {% if smtp.instances | length >= 1 %}
             <key>OutgoingMailServerAuthentication</key>
             <string>EmailAuthPassword</string>
             <key>OutgoingMailServerHostName</key>
-            <string>{{ smtp_hostname }}</string>
+            <string>{{ smtp.hostname }}</string>
             <key>OutgoingMailServerPortNumber</key>
-            <integer>465</integer>
+            <integer>{{ smtp.instances[0].port }}</integer>
             <key>OutgoingMailServerUseSSL</key>
+            {%if imap.instances[0].ssl == "SSL" or imap.instances[0].ssl == "StartTls" %}
             <true/>
+            {% else %}
+            <false/>
+            {% endif %}
             <key>OutgoingMailServerUsername</key>
-            <string>{{ username }}</string>
+            <string>{{ email_address }}</string>
             <key>OutgoingPasswordSameAsIncomingPassword</key>
             <true/>
+            {% endif %}
             <key>PayloadDescription</key>
             <string>Email account configuration for {{ email_address }}</string>
             <key>PayloadDisplayName</key>
