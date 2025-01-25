@@ -12,6 +12,7 @@ use rocket_dyn_templates::Template;
 pub mod resources;
 pub mod routes;
 mod config;
+mod dummy;
 
 #[launch]
 fn rocket() -> _ {
