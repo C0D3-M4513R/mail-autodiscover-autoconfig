@@ -22,6 +22,7 @@
                 <SPA>on</SPA>
                 {{ self::ssl(value=instance.ssl) }}
                 <AuthRequired>on</AuthRequired>
+                <AuthPackage>basic</AuthPackage>
             </Protocol>
             {% endfor %}
             {% for instance in pop.instances %}
@@ -35,6 +36,7 @@
                 <SPA>on</SPA>
                 {{ self::ssl(value=instance.ssl) }}
                 <AuthRequired>on</AuthRequired>
+                <AuthPackage>basic</AuthPackage>
             </Protocol>
             {% endfor %}
             {% for instance in smtp.instances %}
@@ -48,6 +50,7 @@
                 <SPA>on</SPA>
                 {{ self::ssl(value=instance.ssl) }}
                 <AuthRequired>on</AuthRequired>
+                <AuthPackage>basic</AuthPackage>
             </Protocol>
             {% endfor %}
         </Account>
