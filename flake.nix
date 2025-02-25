@@ -73,16 +73,27 @@
             mainProgram = manifest.name;
           };
         };
+        templates = pkgs.stdenv.mkDerivation {
+            name = "templates";
+            src = ./templates;
+            postInstall = ''
+                mkdir $out
+                cp -r . $out
+            '';
+        };
         docker = pkgs.dockerTools.buildLayeredImage {
             name = manifest.name;
             tag = "${manifest.version}-${arch."${system}"}";
 
             contents = [
-                ./templates
+                templates
                 package
             ];
 
             config = {
+                Env = [
+                    "ROCKET_TEMPLATE_DIR=${templates.outPath}"
+                ];
                 Expose = {
                     "8000" = {};
                 };
