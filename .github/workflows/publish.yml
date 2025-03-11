@@ -62,7 +62,7 @@ jobs:
       - name: Load image
         run: docker load -i result
       - name: Tag commit
-        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' }}
+        if: ${{ github.ref == 'refs/heads/main' }}
         run: |
           tag=$(yq .package.version Cargo.toml)
           git tag "$tag"
@@ -72,8 +72,8 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' }}
         run: |
           version=$(yq .package.version Cargo.toml)
-          docker tag $(yq .package.name Cargo.toml):${version}-${{ matrix.arch }} ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:${version}-${{ matrix.arch }}
-          docker push ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:${version}-${{ matrix.arch }}
+          docker tag $(yq .package.name Cargo.toml):${version}-${{ matrix.arch }} ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:${GITHUB_SHA}-${{ matrix.arch }}
+          docker push ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:${GITHUB_SHA}-${{ matrix.arch }}
   multi-arch:
     permissions:
       packages: write
@@ -86,12 +86,12 @@ jobs:
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: "me-n-the-boys"
+          username: "c0d3-m4513r"
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create and Push Version manifest
         run: |
-          version=$(yq .package.version Cargo.toml)
+          version=${GITHUB_SHA}
           docker manifest create ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:${version} ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:${version}-amd64 ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:${version}-arm64
           docker manifest annotate ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:${version} ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:${version}-amd64 --arch amd64
           docker manifest annotate ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:${version} ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:${version}-arm64 --arch arm64
@@ -100,7 +100,7 @@ jobs:
       - name: Create and Push latest manifest
         if: ${{ github.ref == 'refs/heads/main' }}
         run: |
-          version=$(yq .package.version Cargo.toml)
+          version=${GITHUB_SHA}
           docker manifest create ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:latest ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:${version}-amd64 ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:${version}-arm64
           docker manifest annotate ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:latest ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:${version}-amd64 --arch amd64
           docker manifest annotate ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:latest ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:${version}-arm64 --arch arm64
@@ -109,7 +109,7 @@ jobs:
       - name: Create and Push nightly manifest
         if: ${{ github.ref == 'refs/heads/dev' }}
         run: |
-          version=$(yq .package.version Cargo.toml)
+          version=${GITHUB_SHA}
           docker manifest create ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:nightly ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:${version}-amd64 ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:${version}-arm64
           docker manifest annotate ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:nightly ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:${version}-amd64 --arch amd64
           docker manifest annotate ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:nightly ghcr.io/c0d3-m4513r/mail-autodiscover-autoconfig:${version}-arm64 --arch arm64
