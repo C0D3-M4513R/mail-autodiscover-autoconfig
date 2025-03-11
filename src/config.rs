@@ -12,11 +12,11 @@ const CONFIG: Config = Config {
                     port: 993,
                     ssl: SSLType::SSL,
                 },
-                ServiceInstance {
+/*                ServiceInstance {
                     port: 143,
                     ssl: SSLType::StartTls,
                 },
-            ],
+*/            ],
         },
         pop: Service {
             hostname: "mail.c0d3m4513r.com",
@@ -25,11 +25,11 @@ const CONFIG: Config = Config {
                     port: 995,
                     ssl: SSLType::SSL,
                 },
-                ServiceInstance {
+/*                ServiceInstance {
                     port: 110,
                     ssl: SSLType::StartTls,
                 },
-            ],
+*/            ],
         },
         smtp: Service {
             hostname: "mail.c0d3m4513r.com",
@@ -38,7 +38,7 @@ const CONFIG: Config = Config {
                     port: 465,
                     ssl: SSLType::SSL,
                 },
-                ServiceInstance {
+/*                ServiceInstance {
                     port: 25,
                     ssl: SSLType::StartTls,
                 },
@@ -46,7 +46,7 @@ const CONFIG: Config = Config {
                     port: 587,
                     ssl: SSLType::StartTls,
                 },
-            ],
+*/            ],
         },
         profile_uuid: "84641856-9840-48ae-be21-023ff4e750a7",
         mail_uuid: "f812f625-8e98-4181-a634-738fc72e763b",
