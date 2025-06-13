@@ -106,6 +106,7 @@
       {
         packages = {
             "${manifest.name}" = package;
+            templates = templates;
             "${manifest.name}-docker" = docker;
         };
 
