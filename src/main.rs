@@ -5,6 +5,8 @@ extern crate rocket_dyn_templates;
 extern crate serde;
 extern crate tera;
 
+use std::error::Error;
+use rocket::{Build, Rocket};
 use crate::dotenv::dotenv;
 use rocket_dyn_templates::Template;
 
@@ -12,10 +14,13 @@ pub mod resources;
 pub mod routes;
 mod config;
 
-#[launch]
-fn rocket() -> _ {
+fn main() -> Result<(), impl Error>{
     dotenv().ok();
+    let rocket = launch();
+    rocket::execute(rocket.launch()).map(|_|())
+}
 
+fn launch() -> Rocket<Build> {
     let mut rocket = rocket::build().attach(Template::fairing()).mount(
         "/",
         routes![
